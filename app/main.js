@@ -1,4 +1,5 @@
-const net = require("net");
+const net = require("net"),
+      fs = require("fs");
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
@@ -6,12 +7,26 @@ const server = net.createServer((socket) => {
 
     if (request[0].startsWith("GET / ")) {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
+
     } else if (request[0].startsWith("GET /echo/")) {
-      const content = request[0].split(" ")[1].split("/")[2];
-      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`)
+      let content = request[0].split(" ")[1].split("/")[2];
+      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`);
+
     } else if (request[0].startsWith("GET /user-agent ")) {
-      const content = request[2].split(" ")[1];
-      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`)
+      let content = request[2].split(" ")[1];
+      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`);
+
+    } else if (request[0].startsWith("GET /files/")) {
+      let filename = request[0].split(" ")[1].substring(7);
+      let directory = process.argv[3];
+
+      if (fs.existsSync(directory + filename)) {
+        const file = fs.readFileSync(directory + filename)
+        socket.write(`HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${file.length}\r\n\r\n${file}`);
+      } else {
+        socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+      }
+
     } else {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
     }
