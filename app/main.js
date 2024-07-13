@@ -27,6 +27,14 @@ const server = net.createServer((socket) => {
         socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
       }
 
+    } else if (request[0].startsWith("POST /files/")) {
+      let filename = request[0].split(" ")[1].substring(7);
+      let directory = process.argv[3];
+      let content = request[request.length - 1];
+
+      fs.writeFileSync(directory + filename, content);
+      socket.write("HTTP/1.1 201 Created\r\n\r\n");
+
     } else {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
     }
@@ -34,7 +42,6 @@ const server = net.createServer((socket) => {
   });
   socket.on("close", () => {
     socket.end();
-    socket.close();
   });
 });
 
